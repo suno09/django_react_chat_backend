@@ -11,8 +11,8 @@ class ChatConsumer(WebsocketConsumer):
     def init_chat(self, data):
         username1 = data['username1']
         username2 = data['username2']
-        user1 = UserChat.objects.get(username=username1)
-        user2 = UserChat.objects.get(username=username2)
+        user1 = UserChat.objects.get(user__username=username1)
+        user2 = UserChat.objects.get(user__username=username2)
         content = {
             'command': 'init_chat'
         }
@@ -23,7 +23,10 @@ class ChatConsumer(WebsocketConsumer):
         self.send_message(content)
 
     def fetch_messages(self, data):
-        messages = Message.last_50_messages()
+        username1 = data['username1']
+        username2 = data['username2']
+
+        messages = Message.last_50_messages(username1 + '_' + username2)
         content = {
             'command': 'messages',
             'messages': self.messages_to_json(messages)
@@ -33,8 +36,13 @@ class ChatConsumer(WebsocketConsumer):
     def new_message(self, data):
         author = data['from']
         text = data['text']
-        author_user, created = UserChat.objects.get_or_create(username=author)
-        message = Message.objects.create(author=author_user, content=text)
+        username1 = data['username1']
+        username2 = data['username2']
+
+        author_user, created = UserChat.objects.get_or_create(user=author)
+        message = Message.objects.create(author=author_user,
+                                         link=username1 + '_' + username2,
+                                         content=text)
         content = {
             'command': 'new_message',
             'message': self.message_to_json(message)
@@ -50,7 +58,7 @@ class ChatConsumer(WebsocketConsumer):
     def message_to_json(self, message):
         return {
             'id': str(message.id),
-            'author': message.author.username,
+            'author': message.author.user.username,
             'content': message.content,
             'created_at': str(message.created_at)
         }

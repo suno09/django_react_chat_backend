@@ -2,7 +2,8 @@ import uuid
 
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.contrib.auth.models import AbstractUser
+# from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import User
 from django.utils import timezone
 
 
@@ -16,7 +17,6 @@ def validate_message_content(content):
 
 
 class Message(models.Model):
-
     id = models.UUIDField(
         primary_key=True,
         null=False,
@@ -28,18 +28,19 @@ class Message(models.Model):
         blank=False,
         null=False,
         related_name='author_messages',
-        on_delete=models.CASCADE
+        on_delete=models.DO_NOTHING
     )
+    link = models.TextField()
     content = models.TextField(validators=[validate_message_content])
     created_at = models.DateTimeField(auto_now_add=True, blank=True)
 
     @staticmethod
-    def last_50_messages():
-        return Message.objects.order_by('-created_at').all()[:50]
+    def last_50_messages(link):
+        return Message.objects.get(link=link).order_by('-created_at').all()[:50]
 
 
-class UserChat(AbstractUser):
-
+class UserChat(models.Model):
+    user = models.OneToOneField(User, on_delete=models.DO_NOTHING)
     last_read_date = models.DateTimeField(
         auto_now_add=True,
         blank=False,
@@ -50,7 +51,7 @@ class UserChat(AbstractUser):
     REQUIRED_FIELDS = []
 
     def __str__(self):
-        return self.username
+        return self.user.username
 
     def read(self):
         self.last_read_date = timezone.now()
