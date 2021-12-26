@@ -11,8 +11,8 @@ class ChatConsumer(WebsocketConsumer):
     def init_chat(self, data):
         username1 = data['username1']
         username2 = data['username2']
-        user1 = UserChat.objects.get(user__username=username1)
-        user2 = UserChat.objects.get(user__username=username2)
+        user1, created = UserChat.objects.get_or_create(user__username=username1)
+        user2 = UserChat.objects.get_or_create(user__username=username2)
         content = {
             'command': 'init_chat'
         }
