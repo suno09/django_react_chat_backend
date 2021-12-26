@@ -36,7 +36,10 @@ class Message(models.Model):
 
     @staticmethod
     def last_50_messages(link):
-        return Message.objects.get(link=link).order_by('-created_at').all()[:50]
+        try:
+            return Message.objects.get(link=link).order_by('-created_at').all()[:50]
+        except Message.DoesNotExist:
+            return []
 
 
 class UserChat(models.Model):

@@ -4,18 +4,25 @@ from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer
 
 from .models import Message, UserChat
+from django.contrib.auth.models import User
 
 
 class ChatConsumer(WebsocketConsumer):
 
     def init_chat(self, data):
-        username1 = data['username1']
-        username2 = data['username2']
-        user1, created = UserChat.objects.get_or_create(user__username=username1)
-        user2 = UserChat.objects.get_or_create(user__username=username2)
         content = {
             'command': 'init_chat'
         }
+
+        username1 = data['username1']
+        username2 = data['username2']
+        user1 = User.objects.get(username=username1)
+        user2 = User.objects.get(username=username2)
+        if (not user1) or (not user2):
+            content['error'] = 'Unable to get Users'
+            self.send_message(content)
+        user1 = UserChat.objects.get_or_create(user=user1)
+        user2 = UserChat.objects.get_or_create(user=user2)
         if (not user1) or (not user2):
             content['error'] = 'Unable to get Users'
             self.send_message(content)
