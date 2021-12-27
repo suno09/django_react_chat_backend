@@ -33,7 +33,7 @@ class ChatConsumer(WebsocketConsumer):
         username1 = data['username1']
         username2 = data['username2']
 
-        messages = Message.last_50_messages(username1 + '_' + username2)
+        messages = Message.all_messages(username1 + '_' + username2)
         content = {
             'command': 'messages',
             'messages': self.messages_to_json(messages)
@@ -46,7 +46,8 @@ class ChatConsumer(WebsocketConsumer):
         username1 = data['username1']
         username2 = data['username2']
 
-        author_user, created = UserChat.objects.get_or_create(user=author)
+        user = User.objects.get(username=author)
+        author_user, created = UserChat.objects.get_or_create(user=user)
         message = Message.objects.create(author=author_user,
                                          link=username1 + '_' + username2,
                                          content=text)
@@ -77,7 +78,7 @@ class ChatConsumer(WebsocketConsumer):
     }
 
     def connect(self):
-        self.room_name = 'room'
+        self.room_name = self.scope['path'].__str__().replace('/', '_')
         self.room_group_name = 'chat_%s' % self.room_name
 
         # Join room group

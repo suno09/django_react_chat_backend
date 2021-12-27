@@ -35,9 +35,9 @@ class Message(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, blank=True)
 
     @staticmethod
-    def last_50_messages(link):
+    def all_messages(link):
         try:
-            return Message.objects.get(link=link).order_by('-created_at').all()[:50]
+            return Message.objects.filter(link=link).order_by('-created_at')
         except Message.DoesNotExist:
             return []
 
